@@ -1,0 +1,57 @@
+'''
+    Find Heading by using HMC5883L interface with Raspberry Pi using Python
+	http://www.electronicwings.com
+'''
+import smbus		
+from time import sleep  
+import math
+
+#some MPU6050 Registers and their Address
+Register_A     = 0              #Address of Configuration register A
+Register_B     = 0x01           #Address of configuration register B
+Register_mode  = 0x02           #Address of mode register
+
+X_axis_H    = 0x03              #Address of X-axis MSB data register
+Z_axis_H    = 0x05              #Address of Z-axis MSB data register
+Y_axis_H    = 0x07              #Address of Y-axis MSB data register
+declination = -0.00669          #define declination angle of location where measurement going to be done
+M_PI          = 3.14159265359     #define pi value
+
+bus = smbus.SMBus(1) 	
+
+#count loops
+j = 0
+while True:
+        
+        print()
+        print(j)
+        j += 1
+
+        data = bus.read_i2c_block_data(0x1D, 0x00, 7)
+        
+
+        xAccl = (data[1] * 256 + data[2]) / 16
+        yAccl = (data[3] * 256 + data[4]) / 16
+        zAccl = (data[5] * 256 + data[6]) / 16
+
+        if xAccl > 2047 :
+            
+            xAccl -= 4096
+
+
+        if yAccl > 2047 :
+            
+            yAccl -= 4096
+
+
+        if zAccl > 2047 :
+            zAccl -= 4096
+
+                
+        roll  = (math.atan2(-yAccl, zAccl)*180.0)/M_PI;
+        pitch = (math.atan2(xAccl, math.sqrt(yAccl*yAccl + zAccl*zAccl))*180.0)/M_PI;
+
+        print ("X-Axis {}, Y-Axis {}, Z-Axis {}, Roll {}, Pitch {}".format(xAccl, yAccl, zAccl, roll, pitch))
+        sleep (1)
+        
+
